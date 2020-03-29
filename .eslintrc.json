@@ -3,13 +3,5 @@
     "browser": true,
     "node": true
   },
-  "extends": "airbnb-base",
-  "rules": {
-	 "no-plusplus": "off",
-	 "indent": ["error", "tab", {
-		"SwitchCase": 1
-	}],
-	"func-names": "off",
-	"no-tabs": "off"
-  }
+  "extends": "airbnb-base"
 }

@@ -1,31 +1,31 @@
 const detectAudioContext = () => {
-	// Safari still needs a prefix for this feature
-	window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  // Safari still needs a prefix for this feature
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
-	if (window.AudioContext) return new window.AudioContext();
+  if (window.AudioContext) return new window.AudioContext();
 
-	return false;
+  return false;
 };
 
-const mediaPromise = constraints => new Promise((resolve, reject) => {
-	navigator.getUserMedia(constraints, resolve, reject);
+const mediaPromise = (constraints) => new Promise((resolve, reject) => {
+  navigator.getUserMedia(constraints, resolve, reject);
 });
 
 const detectGetUserMedia = () => {
-	navigator.getUserMedia = navigator.getUserMedia
-	|| navigator.webkitGetUserMedia
-	|| navigator.mozGetUserMedia;
+  navigator.getUserMedia = navigator.getUserMedia
+    || navigator.webkitGetUserMedia
+    || navigator.mozGetUserMedia;
 
-	if ((navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || navigator.getUserMedia) {
-		return navigator.mediaDevices && navigator.mediaDevices.getUserMedia
-			? navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
-			: mediaPromise;
-	}
+  if ((navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || navigator.getUserMedia) {
+    return navigator.mediaDevices && navigator.mediaDevices.getUserMedia
+      ? navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
+      : mediaPromise;
+  }
 
-	return false;
+  return false;
 };
 
 module.exports = {
-	detectAudioContext,
-	detectGetUserMedia,
+  detectAudioContext,
+  detectGetUserMedia,
 };
