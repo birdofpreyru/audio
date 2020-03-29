@@ -146,4 +146,6 @@ class PitchAnalyser {
 	}
 }
 
-module.exports = PitchAnalyser;
+module.exports = {
+  PitchAnalyser,
+};

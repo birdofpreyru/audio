@@ -1,7 +1,7 @@
 {
-	"name": "pitch-analyser",
+	"name": "@dr.pogodin/audio",
 	"version": "1.0.0",
-	"description": "A package that returns information about audio input (e.g. note and frequency)",
+	"description": "Web audio utils",
 	"main": "./dist/bundle.js",
 	"scripts": {
 		"start": "webpack --mode=development --watch --config=./webpack.config.js",
@@ -12,11 +12,11 @@
 		"version": "npm run build",
 		"postversion": "git push && git push --follow-tags",
 		"lint": "eslint ./src",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "npm run lint"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/kyunwang/pitch-analyser.git"
+		"url": "git+https://github.com/birdofpreyru/audio.git"
 	},
 	"keywords": [
 		"npm",
@@ -27,15 +27,14 @@
 		"sound",
 		"javascript"
 	],
-	"author": "Kang Yun Wang",
 	"license": "MIT",
 	"files": [
 		"dist"
 	],
 	"bugs": {
-		"url": "https://github.com/kyunwang/pitch-analyser/issues"
+		"url": "https://github.com/birdofpreyru/audio/issues"
 	},
-	"homepage": "https://github.com/kyunwang/pitch-analyser#readme",
+	"homepage": "https://github.com/birdofpreyru/audio#readme",
 	"devDependencies": {
 		"babel-core": "^6.26.3",
 		"babel-loader": "^7.1.5",

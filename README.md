@@ -1,3 +1,33 @@
+![Master Build Status](https://img.shields.io/circleci/project/github/birdofpreyru/audio/master.svg?label=master)
+![Dev Build Status](https://img.shields.io/circleci/project/github/birdofpreyru/audio/develop.svg?label=develop)
+![Latest NPM Release](https://img.shields.io/npm/v/@dr.pogodin/audio.svg)
+![NPM Downloads](https://img.shields.io/npm/dm/@dr.pogodin/audio.svg)
+
+# Audio
+
+It starts as a customized fork of
+[`pitch-analyser`](https://www.npmjs.com/package/pitch-analyser),
+with future plans to blend in a fixed version of features from
+[`soundfont-player`](https://www.npmjs.com/package/soundfont-player).
+
+To use the pitch analyser:
+
+- Install the library usual way
+  ```
+  $ npm install --save @dr.pogodin/audio
+  ```
+
+- Import `PitchAnalyser` class like:
+  ```
+  import { PitchAnalyser } from '@dr.pogodin/audio';
+  ```
+
+- Follow instructions below to create and use analyser instance (some of those
+  instructions may have been already altered compared to the original analyser
+  codebase).
+
+---
+
 # Pitch Analyser
 
 A super simple package for reading audio input from a microphone. E.g. pitch frequency, music notes and the cents.
