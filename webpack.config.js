@@ -1,35 +1,12 @@
-const path = require('path');
-const UglifyWebpackPlugin = require('uglifyjs-webpack-plugin');
+/* eslint-disable global-require, import/no-dynamic-require */
 
-const config = {
-	entry: './src/index.js',
-	devtool: 'source-map',
-	output: {
-		filename: 'bundle.js',
-		path: path.resolve(__dirname, 'dist'),
-		library: 'pitch-analyser',
-		libraryTarget: 'commonjs2',
-	},
-	optimization: {
-		minimizer: [],
-	},
-	module: {
-		rules: [
-			{
-				test: /\.js$/,
-				use: 'babel-loader',
-				exclude: /(node_modules|bower_components)/,
-			},
-		],
-	},
-};
+const LIB_NAME = '@dr.pogodin/audio';
 
-module.exports = (env, argv) => {
-	if (argv.mode === 'development') {}
-
-	if (argv.mode === 'production') {
-		config.optimization.minimizer.push(new UglifyWebpackPlugin({ sourceMap: true }));
-	}
-
-	return config;
+module.exports = function buildConfig(env) {
+  const config = require(`@dr.pogodin/react-utils/config/webpack/lib-${env}`)({
+    context: __dirname,
+    entry: './src',
+    library: LIB_NAME,
+  });
+  return config;
 };

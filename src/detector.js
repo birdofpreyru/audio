@@ -1,3 +1,7 @@
+// TODO: Make this code properly isomorphic?
+
+/* global window, navigator */
+
 const detectAudioContext = () => {
   // Safari still needs a prefix for this feature
   window.AudioContext = window.AudioContext || window.webkitAudioContext;

@@ -10,6 +10,9 @@ It starts as a customized fork of
 with future plans to blend in a fixed version of features from
 [`soundfont-player`](https://www.npmjs.com/package/soundfont-player).
 
+_Beware:_ This library is client-side only. Presumably, it is safe to import
+server-side, but none of its functionality should be used there.
+
 To use the pitch analyser:
 
 - Install the library usual way

@@ -1,3 +1,5 @@
+/* global window */
+
 import { detectAudioContext, detectGetUserMedia } from './detector';
 
 import {
