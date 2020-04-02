@@ -5,210 +5,207 @@
 
 # Audio
 
-It starts as a customized fork of
-[`pitch-analyser`](https://www.npmjs.com/package/pitch-analyser),
-with future plans to blend in a fixed version of features from
-[`soundfont-player`](https://www.npmjs.com/package/soundfont-player).
+Collection of audio utilities. At the moment, its primary component is
+`PitchAnalyser`, which analyses audio stream from the user's media device,
+determines the main frequency of the input, and coverts that to the closest
+music note, with misc supporting information. The library also exports some
+constants and functions for coversions between note frequencies, semitones,
+and octaves.
 
-_Beware:_ This library is client-side only. Presumably, it is safe to import
-server-side, but none of its functionality should be used there.
+### Content
+- [Installation](#installation)
+- [Pitch Analysis](#pitch-analysis)
+- [Reference](#reference)
+  - [`NOTE_NAMES: string[]`](#note-names)
+  - [`FREQ_A4=440.0`](#freq-a4)
+  - [`FREQ_C0=16.352`](#freq-c0)
+  - [`calcMainFrequency(histogram: number[], sampleRate: number): number`](#calcMainFrequency)
+  - [`frequencyToNote(frequency: number): object`](#frequencyToNote)
+  - [`frequencyToSemitone(frequency: number): number`](#frequencyToSemitone)
+  - [`noteNameToSemitone(noteName: string): number`](#noteNameToSemitone)
+  - [`PitchAnalyser: class`](#PitchAnalyser)
+    - [`.constructor()`](#PitchAnalyser-constructor)
+    - [`.getFrequency(): number`](#PitchAnalyser-getFrequency)
+    - [`.getNote(): object`](#PitchAnalyser-getNote)
+    - [`.probeNote(from: number, to: number, options?: object): Promise<object>`](#PitchAnalyser-probeNote)
+    - [`.start(): Promise`](#PitchAnalyser-start)
+    - [`.stop(): Promise`](#PitchAnalyser-stop)
+  - [`semitoneToFrequency(semitone: number): number`](#semitoneToFrequency)
+  - [`semitoneToNoteName(semitone: number): string`](#semitoneToNoteName)
 
-To use the pitch analyser:
-
-- Install the library usual way
-  ```
-  $ npm install --save @dr.pogodin/audio
-  ```
-
-- Import `PitchAnalyser` class like:
-  ```
-  import { PitchAnalyser } from '@dr.pogodin/audio';
-  ```
-
-- Follow instructions below to create and use analyser instance (some of those
-  instructions may have been already altered compared to the original analyser
-  codebase).
-
----
-
-# Pitch Analyser
-
-A super simple package for reading audio input from a microphone. E.g. pitch frequency, music notes and the cents.
-
-This package makes use of the `Web Audio API`
-
-<p align="center">
-	<img src="https://github.com/kyunwang/Repo-Images/blob/master/pitch-analyser/note-detector%20example.png" alt="Demo image" width="300" height="520"/>
-</p>
-
-Here is an example project called note detector using this package here. (**[Repo](https://github.com/kyunwang/note-detector)** / **[Demo](https://kyunwang.github.io/note-detector/)**)
-
-**Note:** To chrome users/devs. From Chrome 66+ autoplay will work anymore. You will need to make use of the `resume()` method to start/resume the analyser. Check the _Methods_ section of the docs here.
-
-# Table of Content
-
--  [Installing](#installing)
--  [Usage](#usage) - [Payload format](#payload-format)
--  [Options](#options)
--  [Methods/Properties](#methods/properties)
--  [License](#license)
-
-# Installing
-
-Npm: `npm i pitch-analyser`
-
-<!-- Download: link full | min ? (would it work?) -->
-
-# Usage
-
-This package returns the frequency, music note and cents from audio input and nothing more.
-
-1. Import the package
+### Installation
 
 ```
-import pitchAnalyser from 'pitch-analyser';
+$ npm install --save @dr.pogodin/audio
 ```
 
-2. Initialize the analyser
-   In the callback we can do whatever we want with the payload
+### Pitch Analysis
 
-```
-const analyser = new pitchAnalyser({
-	callback: function(payload) {
-		console.log(payload); // E.g. { frequency: 220, note: "A3" }
-	}
-});
-```
+Here is a brief example:
+```js
+import { PitchAnalyser } from '@dr.pogodin/audio';
 
-3. Stopping the analyser
-   In case you want to stop the analyser. In `componentWillUnmount` in React for example.
+const analyser = new PitchAnalyser();
 
-```
-componentWillUnmount() {
-	analyser.close();
-}
-```
+/* Beware: you only should call start() and subsequent methods in browser
+ * environment, as they assume AudioContext, and navigator globals exist.
+ * It is safe to use PitchAnalyser constructor at the server-side. */
+analyser.start();
 
-Thats all you need to do to get started. Check out this example project to see it in action. (**[Repo](https://github.com/kyunwang/note-detector)** / **[Demo](https://kyunwang.github.io/note-detector/)**)
+console.log(analyser.getNote());
 
-## Payload format
-
-The payload is an object and can look like this with default options.
-
-```
-{
-	note: "D7",
-	frequency: 2349.32,
-	cents: -21 // if returnCents is set to true
-}
+/*
+ * Prints something similar to:
+ *  {
+ *    "frequency": 441.3,
+ *    "note": "A4",
+ *    "noteFrequency": 440.0,
+ *    "centDeviation": 5.107
+ *  }
+ */
 ```
 
-# Options
+### Reference
 
-These are the few options available.
+A very brief summary of underlying music theory and terms:
+- `A4 = 440.0 Hz` is the reference note frequency.
+- A _semitone_ is the difference between neighbour note frequencies at
+  the logarithmic scale. The semitone values are also 0-based indices of all
+  valid music notes, starting from `C0` up. In a sense, semitone is a synonim
+  for a note.
+- If `F(n)` is the frequency of _n_-th semitone (note), then
+  `F(n+1) = F(n) * (2 ** 1/12)`.
+- An _octave_ contains 12 semitones, and are counted from 0 to 8-th.
+- A _cent_ equals 0.01 semitone.
 
--  callback
--  returnNote
--  returnCents
--  decimals
+Thus, conversions between cents, octaves, semitones are simple arithmetic
+operations, like division / multiplication by 100 or 12, rounding, _etc._
+and do not require dedicated functions. The only tricky conversion is between
+frequencies and semitones, which includes exponent/logarithm, and thus
+dedicated functions below are useful to not remember the formula
+(although it is still pretty simple).
 
-### callback
+Top-level list points below correspond to named exports from the library.
+The references follow quasy-TypeScript format to declare arguments, fields,
+and function return value types.
 
-| Type     | Default | isRequired |
-| -------- | ------- | ---------- |
-| function | null    | **true**   |
+- <a name="note-names"></a>
+  `NOTE_NAMES=['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']`
+  &ndash; Valid note names, starting from `C`, which corresponds to the semitone
+  0, and each next note corresponds to the semitone increment by 1.
 
-Through the `callback` you will receive the output and will need to handle what to do with it here.
+- <a name="freq-a4"></a>
+  `FREQ_A4=440.0` &ndash; A4 note reference frequency [Hz].
 
-```
-new pitchAnalyser({
-	callback: function(value) {
-		// E.g. { frequency: 220, note: "A3" }
-		console.log(value);
-	}
-});
-```
+- <a name="freq-c0"></a>
+  `FREQ_CO=16.352...` &ndash; C0 note reference frequency [Hz], calculated based
+  on `FREQ_A4`.
 
-### returnNote
+- <a name="calcMainFrequency"></a>
+  `calcMainFrequency(histogram: number[], sampleRate: number): number` &ndash;
+  Given a frequency power `histogram`, build by an audio `AnalyserNode` for an
+  audio signal sampled at the specified `sampleRate` [Hz], determines and
+  returns the signal main frequency [Hz].
 
-| Type    | Default | isRequired |
-| ------- | ------- | ---------- |
-| boolean | true    | **false**  |
+- <a name="frequencyToNote"></a>
+  `frequencyToNote(frequency: number): object` &ndash; Converts `frequency` [Hz]
+  to an object with information about the closest music note.
 
-If this option is set to true, the frequency and note will be passed to the `callback` function.
+  **Result Fields**
+  - `note: string` &ndash; Note name, including the octave number.
+  - `noteFrequency: number` &ndash; Note frequency [Hz].
+  - `centDeviation: number` &ndash; The difference [cents] between `frequency`
+    and the determined `noteFrequency`.
 
-```
-new pitchAnalyser({
-	returnNote: true,
-	...other options...
-});
-```
+- <a name="frequencyToSemitone"></a>
+  `frequencyToSemitone(frequency: number): number` &ndash; Converts `frequency`
+  [Hz] into real semitone value. Should you need the closest integer semitone
+  index, you may take `Math.round(semitone)` of the result.
 
-### returnCents
+- <a name="noteNameToSemitone"></a>
+  `noteNameToSemitone(noteName: string): number` &ndash; Returns semitone
+  corresponding to a note name, which should include the octave, e.g. `A#4`,
+  or `B4`.
 
-**Requires `returnNote`**
+- <a name="PitchAnalyser"></a>
+  `PitchAnalyser: class` &ndash; The class defines objects able to analyse
+  input audio stream from the user's media device, to determine the current
+  main frequency of the signal, the musical note closest to it, and the input
+  deviation from that note.
 
-| Type    | Default | isRequired |
-| ------- | ------- | ---------- |
-| boolean | false   | **false**  |
+  **Beware:** You can create analyser instances server-side, but it is not safe
+  to call any instance methods outside of a browser environment, as the analyser
+  functionality relies on `AudioContext` and `navigator` globals being present
+  in the environment.
 
-Will return the _cents_ if set to true. Requires `returnNote` to be true.
+  **Constructor**
+  - <a name="PitchAnalyser-constructor"></a>
+    `.constructor()` &ndash; Creates a new pitch analyser. As of now it take no
+    arguments, and does not do much. The actual intitializations and connection
+    to a media stream should be done by an explicit call to `.start()` method of
+    the created instance.
+  
+  **Instance Members**
 
-```
-new pitchAnalyser({
-	returnNote: true, // Is required
-	returnCents: true,
-	...other options...
-});
-```
+  - <a name="PitchAnalyser-getFrequency"></a>
+    `.getFrequency(): number` &ndash; Measures the current main
+    frequency [Hz] of audio input.
 
-# Methods/Properties
+  - <a name="PitchAnalyser-getNote"></a>
+    `.getNote(): object` &ndash; Measures the current main frequency
+    of audio input, and returns infromation about the corresponding musical
+    note and frequency deviation from it.
+    
+    **Result Fields**
+    - `.frequency: number` &ndash; The measured main frequency [Hz] of input.
+    - `.note: string` &ndash; The closest note name (e.g. `A#4`).
+    - `.noteFrequency: number` &ndash; The correct note frequency.
+    - `.centDeviation: number` &ndash; The difference between measured
+      frequency and note frequency, in cents.
 
-The methods and properties available for use.
-_You will need to have access to the initializes analyser_
+  - <a name="PitchAnalyser-probeNote"></a>
+    `.probeNote(from: number, to: number, options?: object): Promise<object>`
+    &ndash; Takes a series of
+    frequency measurements within the specified [`from`; `to`] time interval,
+    and returns the average main frequency, and the corresponding note info.
+    
+    **Arguments:**
+    - `from: number` &ndash; UNIX timestamp [ms] of probe start interval.
+    - `to: number` &ndash; UNIX timestamp [ms] of probe end interval.
+    - `options?: object` &ndash; Optional. Additional options:
+    - `options.numSamples=5` &ndash; Optional. The target number of individual
+      frequency measurements done within the probe interval. The probe will do
+      less measurements, if the number turns out to be too high. Default 5.
+    - `options.subInterval=0.9` &ndash; Optional. The first and last frequency
+      measurements are offset by `0.5 * (to - from) * (1.0 - subInterval)`
+      inside the interval, i.e. the actually probed interval is
+      [`from + offset`; `to - offset`]. Defaults `0.9` (i.e. offset equals 5%
+      of the originally specified [`from`; `to`] range).
 
-**Methods**
+    **Resolved Result Fields**
+    - `.frequency: number` &ndash; The measured average main frequency [Hz] of
+      input within the probed interval.
+    - `.centFluctuation: number` &ndash; Standard deviation [cents] of
+      the measured frequency from average
+    - `.note: string` &ndash; The closest note name (e.g. `A#4`).
+    - `.noteFrequency: number` &ndash; The correct note frequency.
+    - `.centDeviation: number` &ndash; The difference [cents] between measured
+      frequency and note frequency.
 
--  resume
--  closeContext
+  - <a name="PitchAnalyser-start"></a>
+    `.start(): Promise` &ndash; Initiates the analyser. It acquires
+    the audio stream from user's media device, and allocate resources necessary
+    for analysis. The result promise resolves once the analyser is ready,
+    you should not call any other methods before that.
+  - <a name="PitchAnalyser-stop"></a>
+    `.stop(): Promise` &ndash; Stops the analyser and releases resources.
+    The result promise resolves once the operation completes.
 
-**Properties**
+- <a name="semitoneToFrequency"></a>
+  `semitoneToFrequency(semitone: number): number` &ndash; Converts a real
+  semitone number into frequency [Hz].
+- <a name="semitoneToNoteName"></a>
+  `semitoneToNoteName(semitone: number): string` &ndash; Converts a semitone
+  number into the note name, including the octave number, e.g. `A#4`.
+  If `semitone` is a real number, it is round down.
 
--  audioContext
-
-## Methods
-
-### resume
-
-An methods form the AudioContext. It is important to call this to start/resume the analyser, because on chrome it will not start automatically.
-
-```
-analyser.audioContext.resume();
-```
-
-### closeContext
-
-When you want fully stop the analyser (will remove the instance);
-
-| Arguments | Type     | Output                                                                        |
-| --------- | -------- | ----------------------------------------------------------------------------- |
-| callback  | function | If a callback is passed, it will be called when the `audioContext` has closed |
-
-```
-analyser.closeContext(callback);
-```
-
-## Properties
-
-### audioContext
-
-The native audioContext can be accessed here for if you are ambitious and need customization.
-_Check the MDN docs or somewhere else for all the information about the usage of AudioContext_
-
-```
-analyser.audioContext
-```
-
-# License
-
-This repo is under the [MIT License](https://github.com/kyunwang/pitch-analyser/blob/master/LICENSE)
