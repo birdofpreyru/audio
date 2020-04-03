@@ -25,9 +25,6 @@
 		"javascript"
 	],
 	"license": "MIT",
-	"files": [
-		"dist"
-	],
 	"bugs": {
 		"url": "https://github.com/birdofpreyru/audio/issues"
 	},

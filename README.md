@@ -65,6 +65,10 @@ console.log(analyser.getNote());
  */
 ```
 
+[`.getNote()`](#PitchAnalyser-getNote) method tests the note being played at
+the moment of call, if you want to check a note was played during an interval of
+time use [`.probeNote()`](#PitchAnalyser-probeNote) method instead.
+
 ### Reference
 
 A very brief summary of underlying music theory and terms:

@@ -49,4 +49,4 @@ jspm_packages
 .build-info
 .build-webpack-config.json
 .vscode
-dr.pogodin-react-sheet-music-*.tgz
+/dr.pogodin-audio-*.tgz
