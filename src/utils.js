@@ -86,10 +86,19 @@ export function semitoneToNoteName(semitone) {
  * @return {number} Semitone.
  */
 export function noteNameToSemitone(noteName) {
-  const [, name, octave] = noteName.match(/([a-gA-G]#?)(\d)/);
-  const index = NOTE_NAMES.indexOf(name.toUpperCase());
-  if (index < 0) throw Error('Invalid note name');
-  return index + 12 * (octave.charCodeAt(0) - '0'.charCodeAt(0));
+  const [,
+    name,
+    accidental,
+    octave,
+  ] = noteName.match(/(.)(#|b)?(\d)/);
+  let res = NOTE_PITCHES[name.toUpperCase()];
+  if (res === undefined) throw Error('Invalid note name');
+  switch (accidental) {
+    case '#': ++res; break;
+    case 'b': --res; break;
+    default:
+  }
+  return res + 12 * parseInt(octave, 10);
 }
 
 /**
