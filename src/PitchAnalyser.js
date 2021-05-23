@@ -1,4 +1,4 @@
-/* global AudioContext, navigator */
+/* global AudioContext, navigator, requestAnimationFrame */
 
 import { time } from '@dr.pogodin/react-utils';
 

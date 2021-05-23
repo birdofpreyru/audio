@@ -12,8 +12,8 @@ const IS_NODE = typeof window === 'undefined' || !window.TRU_FRONT_END;
 
 if (process.env.NODE_ENV === 'production') {
   module.exports = IS_NODE ? eval('require')('./build/production')
-    : require('./build/production/web.bundle.js');
+    : require('./build/production/web.bundle');
 } else {
   module.exports = IS_NODE ? eval('require')('./build/development')
-    : require('./build/development/web.bundle.js');
+    : require('./build/development/web.bundle');
 }
