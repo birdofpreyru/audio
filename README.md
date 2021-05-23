@@ -29,6 +29,7 @@ and octaves.
     - [`.getNote(): object`](#PitchAnalyser-getNote)
     - [`.probeNote(from: number, to: number, options?: object): Promise<object>`](#PitchAnalyser-probeNote)
     - [`.start(): Promise`](#PitchAnalyser-start)
+    - [`.started: readonly boolean`](#PitchAnalyser-started)
     - [`.stop(): Promise`](#PitchAnalyser-stop)
   - [`semitoneToFrequency(semitone: number): number`](#semitoneToFrequency)
   - [`semitoneToNoteName(semitone: number): string`](#semitoneToNoteName)
@@ -201,9 +202,23 @@ and function return value types.
     the audio stream from user's media device, and allocate resources necessary
     for analysis. The result promise resolves once the analyser is ready,
     you should not call any other methods before that.
+
+    It has no effect if called for analyser in starting or started state.
+
+  - <a name="PitchAnalyser-started"></a>
+    `.started: readonly boolean` &ndash; `true` if the analyser is started,
+    `false` otherwise.
+
+    **Beware:** In the current version, it is turns `true` as soon as
+    `.started()` method is called, and does not wait for the analyser
+    actually becoming ready for action. It will be changed in later
+    versions to be `true` only when the analyser is ready.
+
   - <a name="PitchAnalyser-stop"></a>
     `.stop(): Promise` &ndash; Stops the analyser and releases resources.
     The result promise resolves once the operation completes.
+
+    It has no effect if called on analyser in stopping or stopped state.
 
 - <a name="semitoneToFrequency"></a>
   `semitoneToFrequency(semitone: number): number` &ndash; Converts a real

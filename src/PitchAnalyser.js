@@ -22,6 +22,14 @@ export default class PitchAnalyser {
   }
 
   /**
+   * Returns `true` if the analyser is started, `false` otherwise
+   * @return {boolean}
+   */
+  get started() {
+    return !!this.private.audioContext;
+  }
+
+  /**
    * Starts the analyser.
    * @return {Promise} Resolves once the analyser is ready.
    */
@@ -29,10 +37,12 @@ export default class PitchAnalyser {
     const p = this.private;
     if (!p.audioContext) {
       p.audioContext = new AudioContext();
+      console.log('Sample rate:', p.audioContext.sampleRate);
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
       p.analyser = p.audioContext.createAnalyser();
+      console.log(p.analyser);
       p.buffer = new Float32Array(p.analyser.frequencyBinCount);
       const audioSource = p.audioContext.createMediaStreamSource(mediaStream);
       audioSource.connect(p.analyser);
@@ -67,6 +77,40 @@ export default class PitchAnalyser {
     return res;
   }
 
+  async accNote(from, to) {
+    const freqs = [];
+    let ready;
+    const res = new Promise((resolve) => {
+      ready = resolve;
+    });
+    const capture = () => {
+      const now = time.now();
+      if (now >= from && now <= to) freqs.push(this.getFrequency());
+      if (now < to) requestAnimationFrame(capture);
+      else {
+        let sumFreq = 0.0;
+        let sumFreq2 = 0.0;
+        for (let i = 0; i < freqs.length; i += 1) {
+          const f = freqs[i];
+          sumFreq2 += f * f;
+          sumFreq += f;
+        }
+        const frequency = sumFreq / freqs.length;
+        const ans = frequencyToNote(frequency);
+        ans.frequency = frequency;
+
+        const stdDev = Math.sqrt(sumFreq2 / freqs.length - frequency * frequency);
+        const s1 = frequencyToSemitone(frequency);
+        const s2 = frequencyToSemitone(frequency + stdDev);
+        ans.centFluctuation = 100 * (s2 - s1);
+        // console.log('R', res);
+        ready(ans);
+      }
+    };
+    requestAnimationFrame(capture);
+    return res;
+  }
+
   /**
    * Takes a series of pitch measurements inside the specified time interval,
    * and returns average values.
@@ -93,7 +137,9 @@ export default class PitchAnalyser {
     if (delay > 0.0) await time.timer(delay);
 
     for (let i = 0; i < numSamples; i += 1) {
-      freqs.push(this.getFrequency());
+      const f = this.getFrequency();
+      // console.log('S', frequencyToNote(f));
+      freqs.push(f);
       if (time.now() > to) break;
       await time.timer(timeStep); // eslint-disable-line no-await-in-loop
     }
@@ -102,6 +148,7 @@ export default class PitchAnalyser {
     let sumFreq2 = 0.0;
     for (let i = 0; i < freqs.length; i += 1) {
       const f = freqs[i];
+      // console.log('S', i + 1, frequencyToNote(f));
       sumFreq2 += f * f;
       sumFreq += f;
     }
@@ -113,6 +160,7 @@ export default class PitchAnalyser {
     const s1 = frequencyToSemitone(frequency);
     const s2 = frequencyToSemitone(frequency + stdDev);
     res.centFluctuation = 100 * (s2 - s1);
+    // console.log('R', res);
     return res;
   }
 

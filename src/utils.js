@@ -39,8 +39,9 @@ export const FREQ_C0 = FREQ_A4 * (2 ** -4.75);
  * @return {number} Main frequency [Hz].
  */
 export function calcMainFrequency(historgram, sampleRate) {
-  let maxIndex = -1;
+  let maxIndex = 0;
   let maxValue = -Infinity;
+  // console.log(historgram);
   historgram.forEach((value, index) => {
     if (maxValue < value) {
       maxValue = value;
